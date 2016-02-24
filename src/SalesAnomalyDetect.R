@@ -21,7 +21,7 @@ library(foreach)
 setwd("c:/users/hohkim.KOREANAIR/Projects/anomalyDetection")
 
 #### next item should be designated before running program!!!
-source.file <- "./data/sales_test.csv"  
+source.file <- "../data/sales_test.csv"
 begin.date = as.Date("2013-01-01")
 last.date = as.Date("2016-01-10")  # current detection date
 
