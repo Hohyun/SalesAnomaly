@@ -1,10 +1,10 @@
 #### sparkR Init
-Sys.setenv(SPARK_HOME="c:/spark-1.6.0-bin-hadoop2.6")
-.libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib"), .libPaths()))
-library(SparkR)
-library(magrittr)
-sc <- sparkR.init(master="local[*]")
-sqlContext <- sparkRSQL.init(sc)
+# Sys.setenv(SPARK_HOME="c:/spark-1.6.0-bin-hadoop2.6")
+# .libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib"), .libPaths()))
+# library(SparkR)
+# library(magrittr)
+# sc <- sparkR.init(master="local[*]")
+# sqlContext <- sparkRSQL.init(sc)
 
 ####### How to use ###########################################################
 # 1. assign source.file variable 
@@ -15,9 +15,15 @@ sqlContext <- sparkRSQL.init(sc)
 #### libraries
 #install.packages("devtools")
 #devtools::install_github("twitter/AnomalyDetection")
+#install.packages{"doParallel"}
+#install.packages{"dplyr"}
+
 library(AnomalyDetection)
 library(dplyr)
-library(foreach)
+library(doParallel)
+cl <- makeCluster(3)
+registerDoParallel(cl)
+#library(foreach)
 #setwd("c:/users/hohkim.KOREANAIR/Projects/SalesAnomaly")
 
 #### next item should be designated before running program!!!
@@ -92,6 +98,7 @@ get.last.anoms.agent <- function(df, agent, p.weeks=16) {
     error.info <- rbind(error.info,
                         data.frame(agent_no=agent, message = res[1]))
     # print(paste("error : ", agent))
+    return(NULL)
   }
   else
     return(res$anoms)
@@ -111,6 +118,7 @@ get.anoms.agent <- function(df, agent, p.weeks=16) {
     error.info <- rbind(error.info,
                         data.frame(agent_no=agent, message = res[1]))
     # print(paste("error : ", agent))
+    return(NULL)
   }
   else
     return(res$anoms)
@@ -134,6 +142,23 @@ get.anoms.all <- function(df, agents, p.weeks=16) {
   }
   return(anomalies)
 }
+
+
+get.last.anoms.all.parallel <- function(df, agents, p.weeks=16) {
+  anomalies <- foreach (agent = agents, .combine = rbind) %dopar% {
+    temp_anoms <- get.last.anoms.agent(df, agent, p.weeks)
+    if (dim(temp_anoms)[1] != 0)
+      data.frame(agent, temp_anoms)
+  }
+}
+
+get.anoms.all.parallel <- function(df, agents, p.weeks=16) {
+  anomalies <- foreach (agent = agents, .combine=rbind) %dopar% {
+    temp_anoms <- get.anoms.agent(df, agent, p.weeks)
+    data.frame(agent, temp_anoms)
+  }
+}
+
 #### Detection Process ######################################################
 
 ## step 1. Set up variables
@@ -148,7 +173,10 @@ full.sales <- arrange(full.sales, region, branch, agent_no, timestamp)
 
 ## Step 3. Detect Anomalies
 anomalies.all <- get.anoms.all(full.sales, agents, 16)
+anomalies1.all <- get.anoms.all.parallel(full.sales, agents, 16)
+
 anomalies.last <- get.last.anoms.all(full.sales, agents, 16)
+anomalies1.last <- get.last.anoms.all.parallel(full.sales, agents, 16)
 
 head(anomalies.all)
 
