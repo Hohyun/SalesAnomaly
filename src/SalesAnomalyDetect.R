@@ -18,7 +18,7 @@ sqlContext <- sparkRSQL.init(sc)
 library(AnomalyDetection)
 library(dplyr)
 library(foreach)
-setwd("c:/users/hohkim.KOREANAIR/Projects/anomalyDetection")
+#setwd("c:/users/hohkim.KOREANAIR/Projects/SalesAnomaly")
 
 #### next item should be designated before running program!!!
 source.file <- "../data/sales_test.csv"
